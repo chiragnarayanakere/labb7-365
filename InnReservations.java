@@ -10,9 +10,7 @@ public class InnReservations {
 
         try {
             InnReservations hp = new InnReservations();
-            System.out.println("hi!");
             hp.demo2();
-            System.out.println("hey!");
         } catch (SQLException e) {
             System.err.println("SQLException: " + e.getMessage());
             System.err.println("SQLState: " + e.getSQLState());
@@ -25,9 +23,9 @@ public class InnReservations {
 
         try {
             Connection conn = DriverManager.getConnection(url, name, pass);
-            System.out.println("worked!");
             
-            String sql = "SELECT * FROM INN.Reservations";
+            String sql = "SELECT * FROM lab7_rooms";
+            String sql2 = "SELECT * FROM lab7_reservations";
 
             // Step 3: (omitted in this example) Start transaction
 
@@ -38,6 +36,15 @@ public class InnReservations {
                 
                 // Step 5: Handle results
                 System.out.format("Result: %b %n", exRes);
+            }
+
+            try (Statement stmt2 = conn.createStatement()) {
+
+                // Step 4: Send SQL statement to DBMS
+                boolean exRes2 = stmt2.execute(sql2);
+                
+                // Step 5: Handle results
+                System.out.format("Result: %b %n", exRes2);
             }
 
             
