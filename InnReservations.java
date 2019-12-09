@@ -4,9 +4,9 @@ import java.sql.*;
 
 public class InnReservations {
 
-    String url = "jdbc:mysql://db.labthreesixfive.com/cnarayan?autoReconnect=true&useSSL=false";
-    String name = "cnarayan";
-    String pass = "CSC365-F2019_011277717";
+    String url = "jdbc:mysql://db.labthreesixfive.com/tpluu?autoReconnect=true&useSSL=false";
+    String name = "tpluu";
+    String pass = "CSC365-F2019_010053260";
 
     public static void main(String[] args) {
 
@@ -27,7 +27,7 @@ public class InnReservations {
             Connection conn = DriverManager.getConnection(url, name, pass);
             
             String sql = "SELECT * FROM lab7_rooms";
-            String sql2 = "SELECT * FROM lab7_reservations";
+            String sql2 = "SELECT * FROM lab7_reservations where firstname = "Thinh"";
 
             // Step 3: (omitted in this example) Start transaction
 
@@ -52,5 +52,7 @@ public class InnReservations {
             
         } finally{} 
     }
+
+    
 
 }
