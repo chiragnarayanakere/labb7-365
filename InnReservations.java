@@ -23,7 +23,7 @@ public class InnReservations {
 
         try {
             Connection conn = DriverManager.getConnection(url, name, pass);
-            
+
             String sql = "SELECT * FROM lab7_rooms";
             String sql2 = "SELECT * FROM lab7_reservations";
 
@@ -33,7 +33,7 @@ public class InnReservations {
 
                 // Step 4: Send SQL statement to DBMS
                 boolean exRes = stmt.execute(sql);
-                
+
                 // Step 5: Handle results
                 System.out.format("Result: %b %n", exRes);
             }
@@ -42,13 +42,14 @@ public class InnReservations {
 
                 // Step 4: Send SQL statement to DBMS
                 boolean exRes2 = stmt2.execute(sql2);
-                
+
                 // Step 5: Handle results
                 System.out.format("Result: %b %n", exRes2);
             }
 
-            
-        } finally{} 
+
+        } finally{}
     }
+
 
 }
