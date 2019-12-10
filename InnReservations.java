@@ -189,7 +189,7 @@ public class InnReservations {
          default: System.out.println("Please enter a valid command!");
       }
    }
-<<<<<<< HEAD
+
          
     private void connect_to_DB() throws SQLException {
 
@@ -225,7 +225,7 @@ public class InnReservations {
     }
 
 }
-=======
+
  
-}
->>>>>>> aeb0194483d94033615df33a51a7985c4e5a04e5
+
+
