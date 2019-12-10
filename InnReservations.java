@@ -7,15 +7,16 @@ public class InnReservations {
     String name = "cnarayan";
     String pass = "CSC365-F2019_011277717";
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException{
 
         try {
             InnReservations hp = new InnReservations();
-         
+
             while (true) {
             
-               hp.connect_to_DB();
+               hp.display_prompt();
             }
+            
          
         } catch (SQLException e) {
             System.err.println("SQLException: " + e.getMessage());
@@ -25,68 +26,120 @@ public class InnReservations {
         }
     }
 
-    private String func_req_1() {
+    private void func_req_1() throws SQLException{
    
       System.out.println("Rooms and Rates");
 
-      //create sql statement, pass to function
-      String sql = "SELECT * FROM lab7_rooms";
+      //create sql statements, pass to function
+      String sql1 = "select RoomName, round(sum(DATEDIFF(CheckOut, CheckIn))/180, 2) as popu"
+                    + " from cnarayan.lab7_rooms r, cnarayan.lab7_reservations re"
+                    + " where r.RoomCode = re.Room"
+                    + " and CheckIn >= DATE_ADD(NOW(), INTERVAL -180 DAY)"
+                    + " group by RoomName"
+                    + " order by popu desc";
 
-      return sql;
+      String sql2 = "select * from cnarayan.lab7_rooms";
+
+      String sql3 = "select RoomName, diff as recent_stay_length, Checkout as recent_checkout from" 
+                  + " (select RoomName, DATEDIFF(CheckOut, CheckIn) as diff, Checkout,"
+                  + " RANK() over (partition by RoomName order by DATEDIFF(CheckOut, Now()) desc) as RANKING"
+                  + " from cnarayan.lab7_rooms r, cnarayan.lab7_reservations re"
+                  + " where r.RoomCode = re.Room"
+                  + " and DATEDIFF(CheckOut, Now()) < 0) as t"
+                  + " where RANKING = 1";
+
+      //connect to the database, pass sql statements to function
+      try {
+
+         connect_to_DB_fr1(sql1, sql2, sql3);
+
+      } catch (SQLException e) {
+            throw new SQLException(e);
+         }
     }
 
-    private String func_req_2() {
+   //create new connect to DB function for each Function Requirement
+   private void connect_to_DB_fr1(String s1, String s2, String s3) throws SQLException {
+        
+         try {
+            Connection conn = DriverManager.getConnection(url, name, pass);
+            
+            String sql1 = s1;
+            String sql2 = s2;
+            String sql3 = s3;
+
+            //create new statement per sql query
+            try (Statement stmt = conn.createStatement()) {
+
+               //need to figure out how to output the right values
+                boolean exRes = stmt.execute(sql1);
+                System.out.format("Result: %b %n", exRes);
+                System.out.println("");
+            }
+
+            try (Statement stmt2 = conn.createStatement()) {
+
+                boolean exRes2 = stmt2.execute(sql2);
+                System.out.format("Result: %b %n", exRes2);
+                System.out.println("");
+            }
+
+            try (Statement stmt3 = conn.createStatement()) {
+
+                boolean exRes3 = stmt3.execute(sql3);
+                System.out.format("Result: %b %n", exRes3);
+                System.out.println("");
+            }
+            
+        } finally{} 
+    }
+
+    private void func_req_2() {
    
       System.out.println("Make a Reservation");
 
       //create sql statement, pass to function
       String sql = "SELECT * FROM lab7_rooms";
 
-      return sql;
     }
 
-    private String func_req_3() {
+    private void func_req_3() {
    
       System.out.println("Edit Reservation");
 
       //create sql statement, pass to function
       String sql = "SELECT * FROM lab7_rooms";
 
-      return sql;
     }
 
-    private String  func_req_4() {
+    private void func_req_4() {
    
       System.out.println("Cancel Reservation");
 
       //create sql statement, pass to function
       String sql = "SELECT * FROM lab7_rooms";
 
-      return sql;
     }
 
-
-   private String func_req_5() {
+   private void func_req_5() {
    
       System.out.println("Detailed Reservation Information");
 
       //create sql statement, pass to function
       String sql = "SELECT * FROM lab7_rooms";
 
-      return sql;
    }
 
-   private String func_req_6() {
+   private void func_req_6() {
    
       System.out.println("Revenue Overview");
 
       //create sql statement, pass to function
       String sql = "SELECT * FROM lab7_rooms";
 
-      return sql;
    }
 
-    private String display_prompt() {
+    private void display_prompt() throws SQLException {
 
       int choice;
       String statement = "";
@@ -121,57 +174,20 @@ public class InnReservations {
          case 0: System.out.println("Goodbye!");
                  System.exit(1);
                  break;
-         case 1: statement = func_req_1();
+         case 1: func_req_1();
                  break;
-         case 2: statement = func_req_2();
+         case 2: func_req_2();
                  break;
-         case 3: statement = func_req_3();
+         case 3: func_req_3();
                  break;
-         case 4: statement = func_req_4();
+         case 4: func_req_4();
                  break;
-         case 5: statement = func_req_5();
+         case 5: func_req_5();
                  break;
-         case 6: statement = func_req_6();
+         case 6: func_req_6();
                  break;
          default: System.out.println("Please enter a valid command!");
       }
-
-      return statement;
-
    }
-         
-    private void connect_to_DB() throws SQLException {
-
-        try {
-            Connection conn = DriverManager.getConnection(url, name, pass);
-            
-            String sql = display_prompt();
-
-            System.out.println("SQL: " + sql);
-            
-            // Step 3: (omitted in this example) Start transaction
-
-            try (Statement stmt = conn.createStatement()) {
-
-                // Step 4: Send SQL statement to DBMS
-                boolean exRes = stmt.execute(sql);
-                
-                // Step 5: Handle results
-                System.out.format("Result: %b %n", exRes);
-                System.out.println("");
-            }
-
-            /*try (Statement stmt2 = conn.createStatement()) {
-
-                // Step 4: Send SQL statement to DBMS
-                boolean exRes2 = stmt2.execute(sql2);
-                
-                // Step 5: Handle results
-                System.out.format("Result: %b %n", exRes2);
-            }*/
-
-            
-        } finally{} 
-    }
-
+ 
 }
