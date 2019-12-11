@@ -161,7 +161,7 @@ public class InnReservations {
       String[] names = new String[10];
 
       //create sql statement, pass to function
-      for (int i = 0; i < 12; i++) {
+      for (int i = 1; i < 13; i++) {
 
          fill_table(i, rev);
       }
@@ -232,7 +232,7 @@ public class InnReservations {
                          + " round(SUM((DATEDIFF(CheckOut, CheckIn) * Rate)), 0) as Monthly_Revenue"
                          + " from cnarayan.lab7_rooms r, cnarayan.lab7_reservations re"
                          + " where r.RoomCode = re.Room"
-                         + " and MONTH(CheckOut) = " + (i + 1) 
+                         + " and MONTH(CheckOut) = " + (i) 
                          + " group by Room, month"
                          + " order by Room";
 
@@ -246,7 +246,7 @@ public class InnReservations {
                     //String RoomName = rs.getString("RoomName");
                     //int month = rs.int("month");
                     int mr = rs.getInt("Monthly_Revenue");
-                    rev[roomName_counter++][i] = mr;
+                    rev[roomName_counter++][i-1] = mr;
                 }
 
               // System.out.println("");
