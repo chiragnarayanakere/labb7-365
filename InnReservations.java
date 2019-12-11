@@ -28,8 +28,6 @@ public class InnReservations {
 
     private void func_req_1() throws SQLException{
    
-      System.out.println("Rooms and Rates");
-
       //create sql statements, pass to function
       String sql1 = "select RoomName, round(sum(DATEDIFF(CheckOut, CheckIn))/180, 2) as popu"
                     + " from cnarayan.lab7_rooms r, cnarayan.lab7_reservations re"
@@ -69,14 +67,26 @@ public class InnReservations {
             String sql3 = s3;
 
             //create new statement per sql query
-            try (Statement stmt = conn.createStatement()) {
+            try (Statement stmt = conn.createStatement();
+                  ResultSet rs = stmt.executeQuery(sql1)) {
 
-               //need to figure out how to output the right values
-                boolean exRes = stmt.execute(sql1);
-                System.out.format("Result: %b %n", exRes);
-                System.out.println("");
+            System.out.println("");
+
+            String r = "RoomName";
+            String pop = "popularity";
+
+            System.out.format("%-30s %-25s", r, pop);
+            System.out.println("");
+
+               while (rs.next()) {
+                    String RoomName = rs.getString("RoomName");
+                    float popu = rs.getFloat("popu");
+                    System.out.format("%-30s%5.2f\n", RoomName, popu);
+                }
+
+               System.out.println("");
             }
-
+               
             try (Statement stmt2 = conn.createStatement()) {
 
                 boolean exRes2 = stmt2.execute(sql2);
@@ -84,11 +94,24 @@ public class InnReservations {
                 System.out.println("");
             }
 
-            try (Statement stmt3 = conn.createStatement()) {
+            try (Statement stmt = conn.createStatement();
+                  ResultSet rs = stmt.executeQuery(sql3)) {
 
-                boolean exRes3 = stmt3.execute(sql3);
-                System.out.format("Result: %b %n", exRes3);
-                System.out.println("");
+               String room = "RoomName";
+               String stay = "Stay";
+               String co = "Recent Checkout";
+
+               System.out.format("%-10s %21s %19s", room, stay, co);
+               System.out.println("");
+
+               while (rs.next()) {
+                    String RoomName = rs.getString("RoomName");
+                    int rsl = rs.getInt("recent_stay_length");
+                    String date = rs.getString("recent_checkout");
+                    System.out.format("%-30s %-2d %15s\n", RoomName, rsl, date);
+                }
+
+               System.out.println("");
             }
             
         } finally{} 
@@ -130,12 +153,71 @@ public class InnReservations {
 
    }
 
-   private void func_req_6() {
+   private void func_req_6() throws SQLException{
    
-      System.out.println("Revenue Overview");
+      System.out.println("");
+
+      int[][] rev = new int[10][12];
 
       //create sql statement, pass to function
-      String sql = "SELECT * FROM lab7_rooms";
+      for (int i = 0; i < 12; i++) {
+
+         fill_table(i, rev);
+      }
+
+      print_table(rev);
+
+   }
+
+   private void print_table(int[][] rev) throws SQLException {
+
+      for (int i = 0; i < 10; i++) {
+
+         System.out.format("%d  %d  %d  %d  %d  %d  %d  %d  %d  %d  %d  %d  %d | ", 
+            rev[i][0], rev[i][1], rev[i][2], rev[i][3], rev[i][4], rev[i][5], rev[i][6],
+            rev[i][7], rev[i][8], rev[i][9], rev[i][10], rev[i][11], 
+            rev[i][0]+rev[i][1]+rev[i][2]+rev[i][3]+rev[i][4]+rev[i][5]+rev[i][6]+rev[i][7]+rev[i][8]+rev[i][9]+ rev[i][10]+rev[i][11]);
+
+         System.out.println("");
+      }
+
+      System.out.println("");
+
+   }
+
+   private void fill_table(int i, int[][] rev) throws SQLException {
+
+      int roomName_counter = 0;
+
+      try {
+            Connection conn = DriverManager.getConnection(url, name, pass);
+            
+            String sql = "select RoomName, MONTH(CheckOut) as month,"
+                         + " round(SUM((DATEDIFF(CheckOut, CheckIn) * Rate)), 0) as Monthly_Revenue"
+                         + " from cnarayan.lab7_rooms r, cnarayan.lab7_reservations re"
+                         + " where r.RoomCode = re.Room"
+                         + " and MONTH(CheckOut) = " + (i + 1) 
+                         + " group by Room, month"
+                         + " order by Room";
+
+            //create new statement per sql query
+            try (Statement stmt = conn.createStatement();
+                  ResultSet rs = stmt.executeQuery(sql)) {
+
+               //System.out.println("");
+
+               while (rs.next()) {
+                    //String RoomName = rs.getString("RoomName");
+                    //int month = rs.int("month");
+                    int mr = rs.getInt("Monthly_Revenue");
+                    rev[roomName_counter++][i] = mr;
+                }
+
+              // System.out.println("");
+            }
+
+      } finally {}
+
 
    }
 
