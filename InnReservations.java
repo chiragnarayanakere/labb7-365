@@ -158,23 +158,60 @@ public class InnReservations {
       System.out.println("");
 
       int[][] rev = new int[10][12];
+      String[] names = new String[10];
 
       //create sql statement, pass to function
       for (int i = 0; i < 12; i++) {
 
          fill_table(i, rev);
       }
+      
+      get_names(names);
 
-      print_table(rev);
+      print_table(rev, names);
 
    }
 
-   private void print_table(int[][] rev) throws SQLException {
+   private void get_names(String[] names) throws SQLException {
+
+      int count = 0;
+
+      try {
+            Connection conn = DriverManager.getConnection(url, name, pass);
+            
+            String sql = "select RoomName"
+                         + " from cnarayan.lab7_rooms r, cnarayan.lab7_reservations re"
+                         + " where r.RoomCode = re.Room"
+                         + " group by Room"
+                         + " order by Room";
+
+            //create new statement per sql query
+            try (Statement stmt = conn.createStatement();
+                  ResultSet rs = stmt.executeQuery(sql)) {
+
+               //System.out.println("");
+
+               while (rs.next()) {
+                    String RoomName = rs.getString("RoomName");
+                    //int month = rs.int("month");
+                    //String n = rs.getString("Monthly_Revenue");
+                    names[count++] = RoomName;
+                }
+
+              // System.out.println("");
+            }
+
+      } finally {}
+   }
+
+   private void print_table(int[][] rev, String[] names) throws SQLException {
+
+      System.out.format("%-30s%-5s%-5s%-5s%-5s%-5s%-5s%-5s%-5s%-5s%-5s%-5s%-5s%-5s\n", "RoomName", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Total");
 
       for (int i = 0; i < 10; i++) {
 
-         System.out.format("%d  %d  %d  %d  %d  %d  %d  %d  %d  %d  %d  %d  %d | ", 
-            rev[i][0], rev[i][1], rev[i][2], rev[i][3], rev[i][4], rev[i][5], rev[i][6],
+         System.out.format("%-30s%-5d%-5d%-5d%-5d%-5d%-5d%-5d%-5d%-5d%-5d%-5d%-5d%-5d", 
+            names[i], rev[i][0], rev[i][1], rev[i][2], rev[i][3], rev[i][4], rev[i][5], rev[i][6],
             rev[i][7], rev[i][8], rev[i][9], rev[i][10], rev[i][11], 
             rev[i][0]+rev[i][1]+rev[i][2]+rev[i][3]+rev[i][4]+rev[i][5]+rev[i][6]+rev[i][7]+rev[i][8]+rev[i][9]+ rev[i][10]+rev[i][11]);
 
@@ -182,7 +219,6 @@ public class InnReservations {
       }
 
       System.out.println("");
-
    }
 
    private void fill_table(int i, int[][] rev) throws SQLException {
@@ -217,7 +253,6 @@ public class InnReservations {
             }
 
       } finally {}
-
 
    }
 
