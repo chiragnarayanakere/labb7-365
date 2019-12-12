@@ -1,13 +1,16 @@
 import java.sql.*;
 import java.util.*;
 import java.time.LocalDate;
+import java.util.Date;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
 
 public class InnReservations {
 
-    String url = "jdbc:mysql://db.labthreesixfive.com/tpluu?autoReconnect=true&useSSL=false";
-    String name = "tpluu";
-    String pass = "CSC365-F2019_010053260";
+    String url = "jdbc:mysql://db.labthreesixfive.com/cnarayan?autoReconnect=true&useSSL=false";
+    String name = "cnarayan";
+    String pass = "CSC365-F2019_011277717";
 
     public static void main(String[] args) throws SQLException{
 
@@ -96,15 +99,303 @@ public class InnReservations {
         } finally{} 
     }
 
-    private void func_req_2() {
+    private void func_req_2() throws SQLException {
    
       System.out.println("Make a Reservation");
+      try {
 
-      //create sql statement, pass to function
-      String sql = "SELECT * FROM lab7_rooms";
+         connect_to_DB_fr2();
+
+      } catch (SQLException e) {
+            throw new SQLException(e);
+         }
 
     }
 
+   // FR2 Connecting to DB 
+   private void connect_to_DB_fr2() throws SQLException {
+       
+         // Maps room options to option numbers
+         HashMap<String, String> map
+                        = new HashMap<>();
+         HashMap<String, String> baseprices
+                        = new HashMap<>();
+         try {
+            Connection conn = DriverManager.getConnection(url, name, pass);
+            
+            // Collect user input for prefered rooms
+            Scanner sc2 = new Scanner(System.in);
+            System.out.println("Usage: [First Name] [Last Name] [Prefered Room Code | Any]"
+                              + "[Prefered Bed Type | Any] [CheckIn] [CheckOut] [Num Children] [Num Adults] ");
+            System.out.println("Please enter the dates in the form 'YYYY-MM-DD' Thank you");
+            String FN = sc2.next(); // FirstName
+            String LN = sc2.next(); // LastName
+            String RC = sc2.next(); // Room Code **
+            String BT = sc2.next(); // Bed Type **
+            String CI = sc2.next(); // CheckIn
+            String CO = sc2.next(); // CheckOut
+            int NC = sc2.nextInt(); // Num Children
+            int NA = sc2.nextInt(); // Num Adults
+
+            if (NC + NA > 4) {
+               System.out.println("Unfortunately, the maximum number of people in an INN room is 4. Please split your party into a smaller groups. Thank you.\n");
+               return;
+            }
+            // checking for exact matches
+            String sql = 
+            " SELECT RoomCode, RoomName, Beds, bedType, " +
+                   " maxOcc, basePrice, decor, " +
+                   " ROW_NUMBER() OVER () as Opt " +
+                      " FROM cnarayan.lab7_rooms AS Rooms " +
+                      " WHERE RoomCode NOT IN ( " +
+                            " SELECT DISTINCT R.RoomCode " +
+                            " FROM cnarayan.lab7_rooms AS R " +
+                            " INNER " +
+                            " JOIN cnarayan.lab7_reservations AS RE " +
+                            " ON RE.Room = R.RoomCode " +
+                            " WHERE (RE.CheckIn <= ? " +
+                            " AND ? < RE.Checkout) " +
+                            " OR (RE.CheckIn < ? " +
+                            " AND ? <= RE.Checkout) " +
+                            " OR (RE.CheckIn >= ? " +
+                            " AND Checkout <= ?) " +
+                            " OR (RE.CheckIn <= ? " +
+                            " AND Checkout >= ?)) " +
+                      " AND (maxOcc >= ?) ";
+
+               // Specified Bed type
+               if (!(BT.equals("Any"))) {
+                  sql = sql + " AND bedType = ? ";
+               } 
+               // Specified Room Code
+               if (!(RC.equals("Any"))) {
+                  sql = sql + " AND RoomCode = ? ";
+               }
+
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+               // values 
+               ps.setString(1, CI);
+               ps.setString(2, CI);
+               ps.setString(3, CO);
+               ps.setString(4, CO);
+
+               ps.setString(5, CI);
+               ps.setString(6, CO);
+               ps.setString(7, CI);
+               ps.setString(8, CO);
+
+               ps.setInt(9,(NA) + (NC));
+
+
+               // Specified Bed type
+               if (RC.equals("Any") && !(BT.equals("Any"))) {
+                  ps.setString(10, BT);
+               } else if (BT.equals("Any") && !(RC.equals("Any"))) {
+                  ps.setString(10, RC);
+               } else if (!(BT.equals("Any")) && !(RC.equals("Any"))) {
+                  ps.setString(10, BT);
+                  ps.setString(11, RC);
+               }
+
+               
+               try (ResultSet rs = ps.executeQuery()) {
+                  int option = 0;
+                  String x, y, z;
+                  String listing;
+
+                  System.out.println("\nHere are the option(s) that meet all of your criteria: ");
+                    System.out.println(" | Option | Room Code | Room Name               | Beds | Bed Type | Occupancy | Base Price | Decor     |");
+                    System.out.println("---------------------------------------------------------------------------------------------------------");
+                  while (rs.next()) {
+                     x = rs.getString("RoomCode");
+                     y = rs.getString("Opt");
+                     z = rs.getString("basePrice");
+
+                     listing = String.format(" |%-8s|%-11s|%-25s|%-6s|%-10s|%-11s|%-12s|%-11s|", 
+                           y, x, rs.getString("RoomName"), 
+                           rs.getString("Beds"), rs.getString("bedType"), 
+                           rs.getString("maxOcc"), z, 
+                           rs.getString("decor"));
+                     System.out.println(listing);
+                     map.put(y, listing);
+                     baseprices.put(y, z);
+                           option += 1;
+                  }
+                  // If nothing matched, do another query
+                  if (option == 0) {
+                     System.out.println("Unfortunately we do not have any " +
+                           "exact matches for your search. " +
+                           "Pleases consider these alternatives.");
+
+                     String backup = 
+                     " SELECT RoomCode, RoomName, Beds, bedType, " +
+                            " maxOcc, basePrice, decor, " +
+                            " ROW_NUMBER() OVER () as Opt " +
+                               " FROM cnarayan.lab7_rooms AS Rooms " +
+                               " WHERE RoomCode NOT IN ( " +
+                                     " SELECT DISTINCT R.RoomCode " +
+                                     " FROM cnarayan.lab7_rooms AS R " +
+                                     " INNER " +
+                                     " JOIN cnarayan.lab7_reservations AS RE " +
+                                     " ON RE.Room = R.RoomCode " +
+                                     " WHERE (RE.CheckIn <= ? " +
+                                     " AND ? < RE.Checkout) " +
+                                     " OR (RE.CheckIn < ? " +
+                                     " AND ? <= RE.Checkout) " +
+                                     " OR (RE.CheckIn >= ? " +
+                                     " AND Checkout <= ?) " +
+                                     " OR (RE.CheckIn <= ? " +
+                                     " AND Checkout >= ?)) " +
+                               " AND (maxOcc >= ?) ";
+                     try (PreparedStatement pps = conn.prepareStatement(backup)) {
+                         // values 
+                         pps.setString(1, CI);
+                         pps.setString(2, CI);
+                         pps.setString(3, CO);
+                         pps.setString(4, CO);
+
+                         pps.setString(5, CI);
+                         pps.setString(6, CO);
+                         pps.setString(7, CI);
+                         pps.setString(8, CO);
+
+                         pps.setInt(9,(NA) + (NC));
+
+                      try (ResultSet rs2 = pps.executeQuery()) {
+                         option = 0;
+
+                         System.out.println("\nHere are the option(s) that meet all of your date and occupancy criteria: ");
+                           System.out.println(" | Option | Room Code | Room Name               | Beds | Bed Type | Occupancy | Base Price | Decor     |");
+                           System.out.println("---------------------------------------------------------------------------------------------------------");
+                         while (rs2.next() && option < 5) {
+                            x = rs2.getString("RoomCode");
+                            y = rs2.getString("Opt");
+                            z = rs2.getString("basePrice");
+
+                            listing = String.format(" |%-8s|%-11s|%-25s|%-6s|%-10s|%-11s|%-12s|%-11s|", 
+                                  y, x, rs2.getString("RoomName"), 
+                                  rs2.getString("Beds"), rs2.getString("bedType"), 
+                                  rs2.getString("maxOcc"), z, 
+                                  rs2.getString("decor"));
+                            System.out.println(listing);
+                            map.put(y, listing);
+                            baseprices.put(y, z);
+                                  option += 1;
+                        }
+                        if (option == 0) {
+                           System.out.println("Sorry. We do not have any availability for those dates " +
+                                 "with that many people. Please try another reservation.\n");
+                           return;
+                        }
+
+                      }
+                    } finally{}
+                  }
+
+                  System.out.println("\nPlease enter the option number for " +
+                        "the room you would like ot reserve. To cancel, press 'C'.");
+                  
+                  sc2 = new Scanner(System.in);
+                  String nxt = sc2.next();
+                  if (nxt.equals("C")) {
+                     return;
+                  }
+                  String confirmation  = map.get(nxt);
+                  SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                  Date ci, co;
+                  
+                  // Figuring out the date business
+                  String BP = baseprices.get(nxt);
+                  double total = 0.0;
+                  double daily_rate = Double.parseDouble(BP);
+                  try {
+                     ci = sdf.parse(CI);
+                     co = sdf.parse(CO);
+                     //System.out.println(ci);
+                     //System.out.println(co);
+                     Calendar c = Calendar.getInstance();
+                     c.setTime(ci);
+                     int total_nights = 0;
+                     while (c.getTime().compareTo(co) < 0) {
+                        int daynum = c.get(Calendar.DAY_OF_WEEK);
+                        // if it's a weekend
+                        if (daynum == 1 || daynum == 7) {
+                           total = total + (daily_rate * 1.1);
+                        } else {
+                           total = total + daily_rate;
+                        }
+                        total_nights += 1;
+                        c.add(Calendar.DAY_OF_MONTH, 1);
+                     }
+                     total = total * 1.18; // tourist tax
+                                                      
+                     System.out.println("\nThank you for booking a room at the Inn!\n");
+                     System.out.println("Confirmation:\n" + "Name: " + FN + " " + LN + 
+                           "\nCheckIn: " + 
+                           (ci).toString().substring(0,10) +  ", " +
+                           (ci).toString().substring(24, 28) + " Checkout: " + 
+                           (co).toString().substring(0,10) + ", " + 
+                           (co).toString().substring(24,28) + 
+                           "\nRoom Code: " + confirmation.substring(11,15) + 
+                           "\nRoom Name: " + confirmation.substring(23, 48) +
+                           "\nBed Type: " + confirmation.substring(56, 63) +
+                           "\nAdults: " + NA + " Children: " + NC  + "\nTotal Fees: " 
+                           + total + "\n");
+                  
+                     System.out.println("\nPress 'S' to confirm. Press 'C' to cancel.\n");
+                     sc2 = new Scanner(System.in);
+                     nxt = sc2.next();
+                     if (nxt.equals("C")) {
+                        return;
+                     }
+                     String code = "SELECT MAX(CODE) AS M FROM cnarayan.lab7_reservations";
+                     String mc = "10201";
+                     try (Statement stmt3 = conn.createStatement()) {
+                        ResultSet rs3 =  stmt3.executeQuery(code); 
+                        while (rs3.next()) {
+                           mc = rs3.getString("M");
+                        }
+
+                     }
+                     int newcode = Integer.parseInt(mc) + 1;
+                     String insert = "INSERT INTO cnarayan.lab7_reservations " +
+                        " (CODE, Room, CheckIn, Checkout, Rate, " +
+                        "LastName, FirstName, Adults, Kids) " +
+                        "VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                     // Adding the reservation to the table
+                     try (PreparedStatement ppps = conn.prepareStatement(insert)) {
+                        ppps.setInt(1, newcode);
+                        ppps.setString(2, confirmation.substring(11, 15));
+                        ppps.setString(3, CI);
+                        ppps.setString(4, CO);
+                        ppps.setDouble(5, (total / total_nights));
+                        ppps.setString(6, LN);
+                        ppps.setString(7, FN);
+                        ppps.setInt(8, NA);
+                        ppps.setInt(9, NC);
+                        ppps.executeUpdate();
+                        conn.commit();
+                        System.out.println("Yor reservation has been booked.\n");
+                     } catch (SQLException se){
+                          // log exception
+                          throw se;
+                      }
+                     
+                     
+                     } catch (ParseException e) {
+                     e.printStackTrace();
+                     }
+
+        } finally{}
+
+      }
+
+    } finally{}
+
+   }
     // connecting to db for fr3
     private void func_req_3() throws SQLException {
         int code = 0;
