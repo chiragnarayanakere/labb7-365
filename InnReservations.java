@@ -1,11 +1,13 @@
 import java.sql.*;
 import java.util.*;
+import java.time.LocalDate;
+
 
 public class InnReservations {
 
-    String url = "jdbc:mysql://db.labthreesixfive.com/cnarayan?autoReconnect=true&useSSL=false";
-    String name = "cnarayan";
-    String pass = "CSC365-F2019_011277717";
+    String url = "jdbc:mysql://db.labthreesixfive.com/tpluu?autoReconnect=true&useSSL=false";
+    String name = "tpluu";
+    String pass = "CSC365-F2019_010053260";
 
     public static void main(String[] args) throws SQLException{
 
@@ -103,14 +105,208 @@ public class InnReservations {
 
     }
 
-    private void func_req_3() {
-   
-      System.out.println("Edit Reservation");
+    // connecting to db for fr3
+    private void func_req_3() throws SQLException {
+        int code = 0;
+        String room = null;
+        boolean validIn = false;
+        boolean validOut = false;
+        List<Object> params = new ArrayList<Object>();
+        StringBuilder sb = new StringBuilder("UPDATE lab7_reservations SET ");
+                         
+        Scanner scanner = new Scanner(System.in);        
+                              
+        try (Connection conn = DriverManager.getConnection(url, name, pass)){
+            
+            System.out.print("Please enter your reservation number: ");
+            code = scanner.nextInt();
 
-      //create sql statement, pass to function
-      String sql = "SELECT * FROM lab7_rooms";
+            String selectReservation = "SELECT * FROM lab7_reservations WHERE code = ?";
 
+            try (PreparedStatement pstmt = conn.prepareStatement(selectReservation)) {
+                 pstmt.setInt(1, code);
+
+                 // executing the prepared statement
+                try(ResultSet rs = pstmt.executeQuery()) {
+                    // query result is empty set, reservation code not valid
+                    if (!rs.isBeforeFirst() ) {    
+                        System.out.println("Error: Invalid Reservation Code"); 
+                        System.out.println("===============================");
+                    }
+                    while(rs.next()) {
+                        room = rs.getString("Room"); 
+                    }
+                }
+            }
+            // reservation code is valid, continuing update
+            System.out.println("Please enter new values for the following fields, or \"n\" for no change");
+
+            // first name change
+            System.out.print("First Name: ");
+            String firstName = scanner.next();
+            if(!"n".equals(firstName)) {
+                params.add(firstName);
+                sb.append("FirstName = ?");
+            }
+            
+            // last name change
+            System.out.print("Last Name: ");
+            String lastName = scanner.next();
+            if(!"n".equals(lastName)) {
+                if(params.size() > 0){
+                    sb.append(", LastName = ?");
+                } else {
+                    sb.append("LastName = ?");
+                }
+                params.add(lastName);
+            }
+
+            // number of adults change
+            System.out.print("Number of Adults: ");
+            String adults = scanner.next();
+            int num_adults = 0;
+            if(!"n".equals(adults)){
+                num_adults = Integer.parseInt(adults);
+
+                if(params.size() > 0){
+                    sb.append(", Adults = ?");
+                } else {
+                    sb.append("Adults = ?");
+                }
+                params.add(num_adults);    
+            }
+
+            // number of kids change
+            System.out.print("Number of Kids: ");
+            String kids = scanner.next();
+            int num_kids = 0;
+            if(!"n".equals(kids)){
+                num_kids = Integer.parseInt(kids);
+
+                if(params.size() > 0){
+                    sb.append(", Kids = ?");
+                } else {
+                    sb.append("Kids = ?");
+                }
+                params.add(num_kids);    
+            }
+
+            // check in, check out dates
+            System.out.print("Check In (YYYY-MM-DD): ");
+            String checkIn = scanner.next();
+            System.out.print("Check Out (YYYY-MM-DD): ");
+            String checkOut = scanner.next();
+
+            if(!"n".equals(checkIn) && "n".equals(checkOut)) { // only check in changed
+                LocalDate inDate = LocalDate.parse(checkIn);
+                validIn = validCheckin(inDate,room);
+
+                if(!validIn){
+                    if(params.size() > 0){
+                        sb.append(", CheckIn = ?");
+                    } else {
+                        sb.append("CheckIn = ?");
+                    }
+                    params.add(inDate); 
+                }
+            } else if("n".equals(checkIn) && !"n".equals(checkOut)) { //only checkout change
+                LocalDate outDate = LocalDate.parse(checkOut);
+                validOut = validCheckin(outDate,room);
+
+                if(!validOut){
+                    if(params.size() > 0){
+                        sb.append(", Checkout = ?");
+                    } else {
+                        sb.append("Checkout = ?");
+                    }
+                    params.add(outDate); 
+                }
+            } else if(!"n".equals(checkIn) && !"n".equals(checkOut)) { //both changed
+                LocalDate inDate = LocalDate.parse(checkIn);
+                LocalDate outDate = LocalDate.parse(checkOut);
+
+                validIn = validCheckin(inDate,room);
+                validOut = validCheckin(outDate,room);
+
+                if(!validIn || !validOut) {
+                    if(params.size() > 0){
+                        sb.append(", Checkout = ?, Checkout = ?");
+                    } else {
+                        sb.append("Checkout = ?, Checkout = ?");
+                    }
+                    params.add(inDate);
+                    params.add(outDate);
+                } else {
+                    System.out.println("Error: Dates entered have conflicts, please try again");
+                }
+            }
+
+            if(params.size() > 0) {
+                params.add(code);
+                sb.append(" WHERE code = ?");
+
+                try (PreparedStatement pstmt2 = conn.prepareStatement(sb.toString())) {
+                    int i = 1;
+                    for (Object p : params) {
+                        pstmt2.setObject(i++, p);
+                    }
+                    int rowsUpdated = pstmt2.executeUpdate();
+
+                    System.out.format("Updated %d records in reservation%n", rowsUpdated);
+                }  
+            } else {
+                System.out.println("No records updated");
+            }
+        }
     }
+    // helper function for req3: checking valid check in date
+    private boolean validCheckin(LocalDate date, String room) throws SQLException{
+        boolean valid = false;
+        String check = "select * from lab7_reservations " +
+                       "where (? >= checkin and ? < checkout) and room = ?";
+        try (Connection conn = DriverManager.getConnection(url, name, pass)){              
+            try (PreparedStatement pstmt = conn.prepareStatement(check)) {
+                 pstmt.setDate(1, java.sql.Date.valueOf(date));
+                 pstmt.setDate(2, java.sql.Date.valueOf(date));
+                 pstmt.setString(3, room);
+
+                 // executing the prepared statement
+                try(ResultSet rs = pstmt.executeQuery()) {
+                    // query result is empty set, there is no conflict with checkin
+                    if (!rs.isBeforeFirst()) {    
+                        valid = true;
+                    } 
+                }
+            }
+        }
+        return valid;
+    }
+
+    // helper function for req3: checking valid checkout date
+    private boolean validCheckOut(LocalDate date, String room) throws SQLException{
+        boolean valid = false;
+        String check = "select * from lab7_reservations " +
+                       "where (? > checkin and ? <= checkout) and room = ?";
+        try (Connection conn = DriverManager.getConnection(url, name, pass)){              
+            try (PreparedStatement pstmt = conn.prepareStatement(check)) {
+                 pstmt.setDate(1, java.sql.Date.valueOf(date));
+                 pstmt.setDate(2, java.sql.Date.valueOf(date));
+                 pstmt.setString(3, room);
+
+                 // executing the prepared statement
+                try(ResultSet rs = pstmt.executeQuery()) {
+                    // query result is empty set, there is no conflict with checkin
+                    if (!rs.isBeforeFirst()) {    
+                        valid = true;
+                    } 
+                }
+            }
+        }
+        return valid;
+    }
+        
+       
+                 
 
     private void func_req_4() {
    
@@ -189,43 +385,5 @@ public class InnReservations {
          default: System.out.println("Please enter a valid command!");
       }
    }
-
-         
-    private void connect_to_DB() throws SQLException {
-
-        try {
-            Connection conn = DriverManager.getConnection(url, name, pass);
-            
-            String sql = display_prompt();
-
-            System.out.println("SQL: " + sql);
-            
-            // Step 3: (omitted in this example) Start transaction
-
-            try (Statement stmt = conn.createStatement()) {
-
-                // Step 4: Send SQL statement to DBMS
-                boolean exRes = stmt.execute(sql);
-                
-                // Step 5: Handle results
-                System.out.format("Result: %b %n", exRes);
-                System.out.println("");
-            }
-
-            /*try (Statement stmt2 = conn.createStatement()) {
-                // Step 4: Send SQL statement to DBMS
-                boolean exRes2 = stmt2.execute(sql2);
-                
-                // Step 5: Handle results
-                System.out.format("Result: %b %n", exRes2);
-            }*/
-
-            
-        } finally{} 
-    }
-
-}
-
  
-
-
+}
