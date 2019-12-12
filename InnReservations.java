@@ -96,48 +96,50 @@ public class InnReservations {
 
     private void func_req_2() {
 
-      System.out.println("Make a Reservation");
+        System.out.println("Make a Reservation");
 
-      //create sql statement, pass to function
-      String sql = "SELECT * FROM lab7_rooms";
+        //create sql statement, pass to function
+        String sql = "SELECT * FROM lab7_rooms";
 
     }
 
     private void func_req_3() {
 
-      System.out.println("Edit Reservation");
+        System.out.println("Edit Reservation");
 
-      //create sql statement, pass to function
-      String sql = "SELECT * FROM lab7_rooms";
+        //create sql statement, pass to function
+        String sql = "SELECT * FROM lab7_rooms";
 
     }
 
     private void func_req_4() {
 
-      System.out.println("Cancel Reservation");
+        System.out.println("Cancel Reservation");
 
-      //create sql statement, pass to function
-      String sql = "SELECT * FROM lab7_rooms";
+        //create sql statement, pass to function
+        String sql = "SELECT * FROM lab7_rooms";
 
     }
 
-   private void func_req_5() {
+    private void func_req_5() {
 
-      System.out.println("Detailed Reservation Information");
+        System.out.println("Detailed Reservation Information");
+        System.out.println("----------Search----------\nValid fields: First Name, Last Name, Dates, Room Code, " +
+                            "Reservation Code\nEx. First Name: GL%, Dates: 2010-07-22 to 2010-08-10, Room Code: ABC");
 
-      //create sql statement, pass to function
-      String sql = "SELECT * FROM lab7_rooms";
+        //create sql statement, pass to function
+        String sql = "SELECT * FROM lab7_rooms";
 
-   }
+    }
 
-   private void func_req_6() {
+    private void func_req_6() {
 
-      System.out.println("Revenue Overview");
+        System.out.println("Revenue Overview");
 
-      //create sql statement, pass to function
-      String sql = "SELECT * FROM lab7_rooms";
+        //create sql statement, pass to function
+        String sql = "SELECT * FROM lab7_rooms";
 
-   }
+    }
 
     private void display_prompt() throws SQLException {
 
