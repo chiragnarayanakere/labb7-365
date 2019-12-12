@@ -5,9 +5,9 @@ import java.time.LocalDate;
 
 public class InnReservations {
 
-    String url = "jdbc:mysql://db.labthreesixfive.com/cnarayan?autoReconnect=true&useSSL=false";
-    String name = "cnarayan";
-    String pass = "CSC365-F2019_011277717";
+    String url = "jdbc:mysql://db.labthreesixfive.com/tpluu?autoReconnect=true&useSSL=false";
+    String name = "tpluu";
+    String pass = "CSC365-F2019_010053260";
 
     public static void main(String[] args) throws SQLException{
 
@@ -109,8 +109,9 @@ public class InnReservations {
     private void func_req_3() throws SQLException {
         int code = 0;
         String room = null;
-        boolean validIn = false;
-        boolean validOut = false;
+        boolean validIn = true;
+        boolean validOut = true;
+        boolean validBoth = true;
         List<Object> params = new ArrayList<Object>();
         StringBuilder sb = new StringBuilder("UPDATE lab7_reservations SET ");
                          
@@ -199,36 +200,41 @@ public class InnReservations {
 
             if(!"n".equals(checkIn) && "n".equals(checkOut)) { // only check in changed
                 LocalDate inDate = LocalDate.parse(checkIn);
-                validIn = validCheckin(inDate,room);
+                validIn = validCheckin(inDate,room,code);
 
-                if(!validIn){
+                if(validIn){
                     if(params.size() > 0){
                         sb.append(", CheckIn = ?");
                     } else {
                         sb.append("CheckIn = ?");
                     }
                     params.add(inDate); 
+                } else {
+                    System.out.println("Cannot process, date conflict");
+                    return;
                 }
             } else if("n".equals(checkIn) && !"n".equals(checkOut)) { //only checkout change
                 LocalDate outDate = LocalDate.parse(checkOut);
-                validOut = validCheckin(outDate,room);
+                validOut = validCheckOut(outDate,room,code);
 
-                if(!validOut){
+                if(validOut){
                     if(params.size() > 0){
                         sb.append(", Checkout = ?");
                     } else {
                         sb.append("Checkout = ?");
                     }
                     params.add(outDate); 
+                } else {
+                    System.out.println("Cannot process, date conflict");
+                    return;
                 }
             } else if(!"n".equals(checkIn) && !"n".equals(checkOut)) { //both changed
                 LocalDate inDate = LocalDate.parse(checkIn);
                 LocalDate outDate = LocalDate.parse(checkOut);
 
-                validIn = validCheckin(inDate,room);
-                validOut = validCheckin(outDate,room);
+                validBoth = validBoth(inDate, outDate, room, code);
 
-                if(!validIn || !validOut) {
+                if(validBoth) {
                     if(params.size() > 0){
                         sb.append(", Checkout = ?, Checkout = ?");
                     } else {
@@ -238,6 +244,7 @@ public class InnReservations {
                     params.add(outDate);
                 } else {
                     System.out.println("Error: Dates entered have conflicts, please try again");
+                    return;
                 }
             }
 
@@ -260,15 +267,18 @@ public class InnReservations {
         }
     }
     // helper function for req3: checking valid check in date
-    private boolean validCheckin(LocalDate date, String room) throws SQLException{
+    private boolean validCheckin(LocalDate date, String room, int code) throws SQLException{
         boolean valid = false;
-        String check = "select * from lab7_reservations " +
-                       "where (? >= checkin and ? < checkout) and room = ?";
+        String check = "select * from lab7_reservations where " +
+                        "(checkin >= ? and checkin < (select checkout from lab7_reservations " +
+                        "where code = ?)) and room = ? and code <> ?";
+
         try (Connection conn = DriverManager.getConnection(url, name, pass)){              
             try (PreparedStatement pstmt = conn.prepareStatement(check)) {
                  pstmt.setDate(1, java.sql.Date.valueOf(date));
-                 pstmt.setDate(2, java.sql.Date.valueOf(date));
+                 pstmt.setInt(2, code);
                  pstmt.setString(3, room);
+                 pstmt.setInt(4, code);
 
                  // executing the prepared statement
                 try(ResultSet rs = pstmt.executeQuery()) {
@@ -283,15 +293,42 @@ public class InnReservations {
     }
 
     // helper function for req3: checking valid checkout date
-    private boolean validCheckOut(LocalDate date, String room) throws SQLException{
+    private boolean validCheckOut(LocalDate date, String room, int code) throws SQLException{
         boolean valid = false;
-        String check = "select * from lab7_reservations " +
-                       "where (? > checkin and ? <= checkout) and room = ?";
+        String check = "select * from lab7_reservations where " + 
+                        "(checkin > (select checkin from lab7_reservations " +
+                        "where code = ?) and checkin < ?) and room = ? and code <> ?";
+
         try (Connection conn = DriverManager.getConnection(url, name, pass)){              
             try (PreparedStatement pstmt = conn.prepareStatement(check)) {
-                 pstmt.setDate(1, java.sql.Date.valueOf(date));
-                 pstmt.setDate(2, java.sql.Date.valueOf(date));
+                pstmt.setInt(1, code);
+                pstmt.setDate(2, java.sql.Date.valueOf(date));
+                pstmt.setString(3, room);
+                pstmt.setInt(4, code);
+
+                 // executing the prepared statement
+                try(ResultSet rs = pstmt.executeQuery()) {
+                    // query result is empty set, there is no conflict with checkin
+                    if (!rs.isBeforeFirst()) {    
+                        valid = true;
+                    } 
+                }
+            }
+        }
+        return valid;
+    }
+
+    // helper function for req3: checking valid checkout date
+    private boolean validBoth(LocalDate dateIn, LocalDate dateOut, String room, int code) throws SQLException{
+        boolean valid = false;
+        String check = "select * from lab7_reservations where " + 
+                        "(checkin >= ? and checkout < ?) and room = ? and code <> ?";
+        try (Connection conn = DriverManager.getConnection(url, name, pass)){              
+            try (PreparedStatement pstmt = conn.prepareStatement(check)) {
+                 pstmt.setDate(1, java.sql.Date.valueOf(dateIn));
+                 pstmt.setDate(2, java.sql.Date.valueOf(dateOut));
                  pstmt.setString(3, room);
+                 pstmt.setInt(4, code);
 
                  // executing the prepared statement
                 try(ResultSet rs = pstmt.executeQuery()) {
