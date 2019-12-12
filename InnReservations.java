@@ -5,9 +5,9 @@ import java.time.LocalDate;
 
 public class InnReservations {
 
-    String url = "jdbc:mysql://db.labthreesixfive.com/tpluu?autoReconnect=true&useSSL=false";
-    String name = "tpluu";
-    String pass = "CSC365-F2019_010053260";
+    String url = "jdbc:mysql://db.labthreesixfive.com/cnarayan?autoReconnect=true&useSSL=false";
+    String name = "cnarayan";
+    String pass = "CSC365-F2019_011277717";
 
     public static void main(String[] args) throws SQLException{
 
