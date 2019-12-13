@@ -18,7 +18,9 @@ javac InnReservations.java
 To run: 
 java -cp ./mysql-connector-java-8.0.16.jar:. InnReservations [URL] [username] [password]
 
-(c) Information about any known bugs / deficiencies:
+(c) Information about any known bugs / deficiencies: 
+FR6 currently only gives us the revenue for all reservations that start and end in the same month. It does not account for those reservations
+that "hang", where the reservation splits its time between two consecutive months. Everything else should be good to go!
 
 (d) Group Progress:
 
