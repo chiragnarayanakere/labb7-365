@@ -15,10 +15,6 @@ import java.time.LocalDate;
 
 public class InnReservations {
 
-    //String url = "jdbc:mysql://db.labthreesixfive.com/cnarayan?autoReconnect=true&useSSL=false";
-    //String name = "cnarayan";
-    //String pass = "CSC365-F2019_011277717";
-
     static String url;
     static String name;
     static String pass;
