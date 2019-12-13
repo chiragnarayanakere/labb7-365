@@ -8,16 +8,15 @@ cnarayan
 (b) Compilation & Runtime Instructions: 
 Names of environment variables used to pass JDBC URL, username, and password: 
 
-"jdbc:mysql://db.labthreesixfive.com/cnarayan?autoReconnect=true&useSSL=false"
-
-cnarayan
-CSC365-F2019_011277717
+URL: "jdbc:mysql://db.labthreesixfive.com/cnarayan?autoReconnect=true&useSSL=false"
+username: cnarayan
+password: CSC365-F2019_011277717
 
 To compile: 
 javac InnReservations.java
 
 To run: 
-java -cp ./mysql-connector-java-8.0.16.jar:. InnReservations
+java -cp ./mysql-connector-java-8.0.16.jar:. InnReservations [URL] [username] [password]
 
 (c) Information about any known bugs / deficiencies:
 
