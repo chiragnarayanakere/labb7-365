@@ -636,15 +636,43 @@ public class InnReservations {
        
                  
 
-    private void func_req_4() {
+    private void func_req_4() throws SQLException {
    
       System.out.println("Cancel Reservation");
 
       //create sql statement, pass to function
-      String sql = "SELECT * FROM lab7_rooms";
+      connect_to_DB_fr4();
 
     }
-
+   private void connect_to_DB_fr4() throws SQLException {
+    
+    try {
+        Connection conn = DriverManager.getConnection(url,name,pass);
+        
+        System.out.println("Cancel Reservation");
+        // create sql statement, pass to function
+        
+        
+        Scanner scanner = new Scanner(System.in);
+        try {
+            System.out.print("Please enter the reservation code: ");
+            String code = scanner.nextLine();
+            PreparedStatement pstmt = conn.prepareStatement("DELETE from cnarayan.lab7_reservations WHERE code = ?");
+            pstmt.setString(1,code);
+            int rowCount = pstmt.executeUpdate();
+            
+            if(rowCount == 0) {
+                System.out.println("There are no reservations with this code.");            
+            }
+            else if(rowCount == 1) { 
+                System.out.println("Successfully deleted reservation.");
+            }
+        }
+            catch(SQLException e) {
+                System.out.println(e.toString()); 
+            }
+    } finally {}
+   } 
    private void func_req_5() {
    
       System.out.println("Detailed Reservation Information");
