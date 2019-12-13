@@ -652,7 +652,15 @@ public class InnReservations {
                             "Reservation Code\nEx. First Name: GL%, Dates: 2010-07-22 to 2010-08-10, Room Code: ABC\n");
         Scanner sc = new Scanner(System.in)
         String[] inp = sc.nextLine().split(',');
-
+        List<String> validFields = Arrays.asList(new String[]{"First Name", "Last Name", "Dates", "Room Code", "Reservation Code"});
+        for (String s : inp) {
+            String[] parsed = s.split(":");
+            if (!validFields.contains(parsed[0]))
+                continue;
+            if (parsed[0].equals("Dates")) {
+                String[] dates = parsed[0].split("to");
+            }
+        }
 
 
         //create sql statement, pass to function
