@@ -808,7 +808,6 @@ public class InnReservations {
                     else
                         pstmt.setInt(i + 1, Integer.parseInt(inputs.get(i)));
                 }
-                System.out.println(pstmt);
                 try (ResultSet rs = pstmt.executeQuery()) {
                     System.out.println(
                         "------------------------------------RESULTS------------------------------------\n" +
