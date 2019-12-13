@@ -1,0 +1,40 @@
+(a) Group Members: 
+Cole Cummins, Thinh Luu, Chirag Narayanakere, Jasmine Patel, & Somya Lalwani
+CSC 365, Fall 2019
+
+Name of the database (username) in which we created our lab7-specific INN tables:
+cnarayan
+
+(b) Compilation & Runtime Instructions: 
+Names of environment variables used to pass JDBC URL, username, and password: 
+
+URL: "jdbc:mysql://db.labthreesixfive.com/cnarayan?autoReconnect=true&useSSL=false"
+username: "cnarayan"
+password: "CSC365-F2019_011277717"
+
+To compile: 
+javac InnReservations.java
+
+To run: 
+java -cp ./mysql-connector-java-8.0.16.jar:. InnReservations [URL] [username] [password]
+
+(c) Information about any known bugs / deficiencies: 
+FR6 currently only gives us the revenue for all reservations that start and end in the same month. It does not account for those reservations
+that "hang", where the reservation splits its time between two consecutive months. Everything else should be good to go!
+
+(d) Group Progress:
+
+Program Framework - Chirag
+FR1 - Rooms and Rates: Chirag
+FR2 - Reservations: Jasmine
+FR3 - Reservation Change: Thinh
+FR4 - Reservation Cancellation: Somya
+FR5 - Detailed Reservation Information: Cole
+FR6 - Revenue: Chirag
+
+-Group met on Monday 12/9 to divide tasks and start final project
+-Group members individually worked on their individual tasks Tuesday 12/10, Wednesday 12/11, Thursday 12/12, Friday 12/13
+-Group met on Thursday 12/12 to ensure individual parts of project were working and submitted on GitHub
+
+
+
