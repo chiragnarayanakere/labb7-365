@@ -22,6 +22,7 @@ java -cp ./mysql-connector-java-8.0.16.jar:. InnReservations [URL] [username] [p
 
 (d) Group Progress:
 
+Program Framework - Chirag
 FR1 - Rooms and Rates: Chirag
 FR2 - Reservations: Jasmine
 FR3 - Reservation Change: Thinh
