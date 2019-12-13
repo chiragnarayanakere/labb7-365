@@ -352,7 +352,7 @@ public class InnReservations {
                   }
 
                   System.out.println("\nPlease enter the option number for " +
-                        "the room you would like ot reserve. To cancel, press 'C'.");
+                        "the room you would like to reserve. To cancel, press 'C'.");
                   
                   sc2 = new Scanner(System.in);
                   String nxt = sc2.next();
@@ -703,7 +703,6 @@ public class InnReservations {
     try {
         Connection conn = DriverManager.getConnection(url,name,pass);
         
-        System.out.println("Cancel Reservation");
         // create sql statement, pass to function
         
         
