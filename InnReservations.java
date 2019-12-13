@@ -63,7 +63,7 @@ public class InnReservations {
                      + " rank() over (partition by fir.RoomName order by checkout,"
                      + " DATEDIFF(sec.CheckIn, fir.CheckOut) asc) as RANKING"
                      + " from r1 as fir join r1 as sec on fir.RoomName = sec.RoomName"
-                     + " where fir.Checkout < sec.CheckIn)"
+                     + " where fir.Checkout < sec.CheckIn and fir.CheckOut > CURDATE())"
                      + " select room, DATE_ADD(checkout, INTERVAL 1 DAY) as Next_Available"
                      + " from r2 where RANKING = 1 order by room;";
 
