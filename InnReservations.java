@@ -829,8 +829,7 @@ public class InnReservations {
         System.out.println("");
     }
 
-    private void func_req_6() {
-private void func_req_6() throws SQLException{
+    private void func_req_6() throws SQLException{
 
       System.out.println("");
 
