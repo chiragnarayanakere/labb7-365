@@ -21,5 +21,18 @@ java -cp ./mysql-connector-java-8.0.16.jar:. InnReservations
 
 (c) Information about any known bugs / deficiencies:
 
+(d) Group Progress:
+
+FR1 - Rooms and Rates: Chirag
+FR2 - Reservations: Jasmine
+FR3 - Reservation Change: Thinh
+FR4 - Reservation Cancellation: Somya
+FR5 - Detailed Reservation Information: Cole
+FR6 - Revenue: Chirag
+
+-Group met on Monday 12/9 to divide tasks and start final project
+-Group members individually worked on their individual tasks Tuesday 12/10, Wednesday 12/11, Thursday 12/12, Friday 12/13
+-Group met on Thursday 12/12 to ensure individual parts of project were working and submitted on GitHub
+
 
 
