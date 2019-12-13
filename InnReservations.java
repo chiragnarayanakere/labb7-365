@@ -645,27 +645,109 @@ public class InnReservations {
 
     }
 
-    private void func_req_5() {
+    private void func_req_5() throws SQLException {
+        StringBuilder sb = new StringBuilder("select *, RoomName from lab7_reservations join lab7_rooms on Room = RoomCode");
+        StringBuilder order = new StringBuilder("");
 
         System.out.println("Detailed Reservation Information");
         System.out.println("----------Search----------\nValid fields: First Name, Last Name, Dates, Room Code, " +
                             "Reservation Code\nEx. First Name: GL%, Dates: 2010-07-22 to 2010-08-10, Room Code: ABC\n");
-        Scanner sc = new Scanner(System.in)
-        String[] inp = sc.nextLine().split(',');
-        List<String> validFields = Arrays.asList(new String[]{"First Name", "Last Name", "Dates", "Room Code", "Reservation Code"});
-        for (String s : inp) {
-            String[] parsed = s.split(":");
-            if (!validFields.contains(parsed[0]))
-                continue;
-            if (parsed[0].equals("Dates")) {
-                String[] dates = parsed[0].split("to");
+        Scanner sc = new Scanner(System.in);
+        String[] inp = sc.nextLine().split(",");
+
+        HashMap<String, String> validFields = new HashMap<String, String>(30);
+        validFields.put("First Name", "FirstName");     validFields.put("Last Name", "LastName");
+        validFields.put("Room Code", "Room");   validFields.put("Reservation Code", "CODE");
+        validFields.put("Dates", "Dates");  validFields.put("Date", "Date");
+
+        ArrayList<String> types = new ArrayList<String>();
+        ArrayList<String> inputs = new ArrayList<String>();
+
+        try (Connection conn = DriverManager.getConnection(url, name, pass)){
+
+            for (int i = 0; i < inp.length; i++) {
+                if (i == 0)
+                    sb.append(" where ");
+                String[] parsed = inp[i].split(":");
+                if (!validFields.containsKey(parsed[0].trim()) || (parsed.length != 2))
+                    continue;
+                if (parsed[0].trim().equals("Dates")) {
+                    String[] dates = parsed[1].split("to");
+                    if (dates.length > 2)
+                        continue;
+
+                    for (int j = 0; j < dates.length; j++) {
+                        if (!dates[j].trim().matches("^[0-9]{4}[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])"))
+                            continue;
+                        if (dates.length == 1) {
+                            sb.append("checkin <= ? and checkout => ? ");
+                            types.add("date");
+                            inputs.add(dates[j]);
+                        } else if (j == 0)
+                            sb.append("checkin >= ? and ");
+                        else if (j == 1)
+                            sb.append("checkin <= ? ");
+                        types.add("date");
+                        inputs.add(dates[j]);
+                    }
+
+                    order.append("checkin");
+                }
+                else {
+                    order.append(validFields.get(parsed[0].trim()));
+                    sb.append(validFields.get(parsed[0].trim()));
+                    sb.append(" like ? ");
+                    inputs.add(parsed[1].trim());
+                    if (parsed[0].trim().equals("CODE"))
+                        types.add("int");
+                    else
+                        types.add("string");
+                }
+
+                if (i < inp.length - 1) {
+                    order.append(", ");
+                    sb.append("and ");
+                }
             }
-        }
 
+            if(sb.substring(sb.length()-6, sb.length()).equals("where "))
+                sb.delete(sb.length()-6, sb.length());
 
+            if (order.length() > 0) {
+                sb.append(" order by ");
+                sb.append(order.toString());
+            }
+            try (PreparedStatement pstmt = conn.prepareStatement(sb.toString())) {
+
+                for (int i = 0; i < types.size(); i++) {
+                    System.out.println(inputs.get(i));
+                    if (types.get(i).equals("date"))
+                        pstmt.setDate(i + 1, java.sql.Date.valueOf(inputs.get(i).trim()));
+                    else if (types.get(i).equals("string"))
+                        pstmt.setString(i + 1, inputs.get(i));
+                    else
+                        pstmt.setInt(i + 1, Integer.parseInt(inputs.get(i)));
+                }
+                System.out.println(pstmt);
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    System.out.println(
+                        "------------------------------------RESULTS------------------------------------\n" +
+                        " | CODE      | Room | Checkin   | Checkout  | Rate     | LastName      | FirstName     |" +
+                        " Adults    | Kids      | RoomName\n"
+                    );
+                    while(rs.next()) {
+                        String listing = String.format(" |%-11s|%-6s|%-11s|%-11s|%-10s|%-15s|%-15s|%-11s|%-11s|%s",
+                            rs.getString("CODE"), rs.getString("Room"), rs.getString("Checkin"), rs.getString("Checkout"),
+                            rs.getString("Rate"), rs.getString("LastName"), rs.getString("FirstName"),
+                            rs.getString("Adults"), rs.getString("Kids"), rs.getString("RoomName")
+                        );
+                        System.out.println(listing);
+                    }
+                }
+            } finally {}
+        } finally {}
         //create sql statement, pass to function
-        String sql = "SELECT * FROM lab7_rooms";
-
+        System.out.println("");
     }
 
     private void func_req_6() {
